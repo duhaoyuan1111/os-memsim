@@ -17,6 +17,7 @@ uint32_t Mmu::createProcess()
 
     Variable *var = new Variable();
     var->name = "<FREE_SPACE>";
+    var->type = DataType::FreeSpace;
     var->virtual_address = 0;
     var->size = _max_size;
     proc->variables.push_back(var);
@@ -41,6 +42,7 @@ void Mmu::addVariableToProcess(uint32_t pid, std::string var_name, DataType type
 
     Variable *var = new Variable();
     var->name = var_name;
+    var->type = type;
     var->virtual_address = address;
     var->size = size;
     if (proc != NULL)
@@ -60,6 +62,79 @@ void Mmu::print()
         for (j = 0; j < _processes[i]->variables.size(); j++)
         {
             // TODO: print all variables (excluding <FREE_SPACE> entries)
+        }
+    }
+}
+
+DataType Mmu::getVariableType(uint32_t pid, std::string var_name) {
+    int i;
+    Process *proc = NULL;
+    for (i = 0; i < _processes.size(); i++)
+    {
+        if (_processes[i]->pid == pid)
+        {
+            proc = _processes[i];
+        }
+    }
+    for (int j = 0; j < proc->variables.size(); j++) {
+        if (proc->variables[j]->name == var_name)
+        {
+            return proc->variables[j]->type;
+        }
+    }
+    
+}
+
+bool Mmu::doWeHaveProcess(uint32_t pid) {
+    int i;
+    Process *proc = NULL;
+    for (i = 0; i < _processes.size(); i++)
+    {
+        if (_processes[i]->pid == pid)
+        {
+            proc = _processes[i];
+        }
+    }
+    if (proc == NULL) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
+bool Mmu::doWeHaveVariable(uint32_t pid, std::string var_name) {
+    int i;
+    Process *proc = NULL;
+    for (i = 0; i < _processes.size(); i++)
+    {
+        if (_processes[i]->pid == pid)
+        {
+            proc = _processes[i];
+        }
+    }
+    for (int j = 0; j < proc->variables.size(); j++) {
+        if (proc->variables[j]->name == var_name)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+Variable Mmu::findVariable(uint32_t pid, std::string var_name) {
+    int i;
+    Process *proc = NULL;
+    for (i = 0; i < _processes.size(); i++)
+    {
+        if (_processes[i]->pid == pid)
+        {
+            proc = _processes[i];
+        }
+    }
+    for (int j = 0; j < proc->variables.size(); j++) {
+        if (proc->variables[j]->name == var_name)
+        {
+            return *proc->variables[j];
         }
     }
 }
