@@ -121,7 +121,7 @@ bool Mmu::doWeHaveVariable(uint32_t pid, std::string var_name) {
     return false;
 }
 
-Variable Mmu::findVariable(uint32_t pid, std::string var_name) {
+Variable* Mmu::findVariable(uint32_t pid, std::string var_name) {
     int i;
     Process *proc = NULL;
     for (i = 0; i < _processes.size(); i++)
@@ -134,7 +134,20 @@ Variable Mmu::findVariable(uint32_t pid, std::string var_name) {
     for (int j = 0; j < proc->variables.size(); j++) {
         if (proc->variables[j]->name == var_name)
         {
-            return *proc->variables[j];
+            return proc->variables[j];
         }
     }
+}
+
+std::vector<Variable*> Mmu::getVariableList(uint32_t pid) {
+    int i;
+    Process *proc = NULL;
+    for (i = 0; i < _processes.size(); i++)
+    {
+        if (_processes[i]->pid == pid)
+        {
+            proc = _processes[i];
+        }
+    }
+    return proc->variables;
 }

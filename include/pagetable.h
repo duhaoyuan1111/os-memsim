@@ -26,6 +26,7 @@ class PageTable {
 private:
     int _page_size;
     std::map<std::string, int> _table;
+    std::vector<int> _frameArray;
 
     std::vector<std::string> sortedKeys();
 
@@ -36,6 +37,8 @@ public:
     void addEntry(uint32_t pid, int page_number);
     int getPhysicalAddress(uint32_t pid, uint32_t virtual_address);
     void print();
+    int getPageSize();
+    bool PageTable::lookUpTable(uint32_t pid, int page_number);
 };
 
 #endif // __PAGETABLE_H_
