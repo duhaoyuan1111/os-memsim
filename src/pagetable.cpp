@@ -29,13 +29,19 @@ void PageTable::addEntry(uint32_t pid, int page_number)
     // Combination of pid and page number act as the key to look up frame number
     std::string entry = std::to_string(pid) + "|" + std::to_string(page_number);
 
-
     int frame = 0;
     // Find free frame
-    // TODO: implement this!
-
-    _table[entry] = frame;
-    _frameArray.push_back(frame);
+    if (!_table.empty()) { // not empty
+        for (auto const& x : _table) {
+            if (x.second >= frame) {
+                frame = x.second;
+            }
+        }
+        frame++; // next valid frame
+        _table[entry] = frame;
+    } else { // empty, use frame 0
+        _table[entry] = frame;
+    }
 }
 
 int PageTable::getPhysicalAddress(uint32_t pid, uint32_t virtual_address)
