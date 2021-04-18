@@ -37,6 +37,7 @@ public:
     bool doWeHaveVariable(uint32_t pid, std::string var_name);
     Variable* findVariable(uint32_t pid, std::string var_name);
     std::vector<Variable*> getVariableList(uint32_t pid);
+    void printProcesses();
 };
 
 #endif // __MMU_H_

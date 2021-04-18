@@ -50,11 +50,13 @@ void Mmu::addVariableToProcess(uint32_t pid, std::string var_name, DataType type
         proc->variables[idxToInsert]->size -= size;
         proc->variables[idxToInsert]->virtual_address += size;
         proc->variables.insert(proc->variables.begin() + idxToInsert, var);
-        //push_back(var);
-        std::cout << var->virtual_address << "---vir_addr" << std::endl;
-        std::cout << var->name << "---name" << std::endl;
+        
+        if (var_name != "<TEXT>" && var_name != "<GLOBALS>" && var_name != "<STACK>" && var_name != "<FREE_SPACE>") {
+            std::cout << var->virtual_address << std::endl;
+        }
+        /*std::cout << var->name << "---name" << std::endl;
         std::cout << proc->variables.size() << "---size"<< std::endl;
-        std::cout << var->virtual_address + var->size << "---ending addr"<< std::endl;
+        std::cout << var->virtual_address + var->size << "---ending addr"<< std::endl;*/
     }
 }
 
@@ -66,9 +68,15 @@ void Mmu::print()
     std::cout << "------+---------------+--------------+------------" << std::endl;
     for (i = 0; i < _processes.size(); i++)
     {
+        uint32_t pid = _processes[i]->pid;
         for (j = 0; j < _processes[i]->variables.size(); j++)
         {
-            // TODO: print all variables (excluding <FREE_SPACE> entries)
+            std::string var_name = _processes[i]->variables[j]->name;
+            uint32_t vir_addr = _processes[i]->variables[j]->virtual_address;
+            uint32_t var_size = _processes[i]->variables[j]->size;
+            if (var_name != "<FREE_SPACE>") {
+                printf(" %4u | %-13s |  0x%08X  | %10u \n", pid, var_name.c_str(), vir_addr, var_size);
+            }
         }
     }
 }
@@ -160,4 +168,11 @@ std::vector<Variable*> Mmu::getVariableList(uint32_t pid) {
         }
     }
     return proc->variables;
+}
+
+void Mmu::printProcesses() {
+    for (int i = 0; i < _processes.size(); i++) {
+        std::cout << _processes[i]->pid << std::endl;
+    }
+    
 }

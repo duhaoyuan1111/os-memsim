@@ -75,7 +75,15 @@ void PageTable::print()
 
     for (i = 0; i < keys.size(); i++)
     {
-        // TODO: print all pages
+        std::string del = "|";
+        std::string temp = keys.at(i);
+        int frame_number = _table[keys.at(i)];
+        size_t pos = temp.find(del);
+        std::string pid = temp.substr(0, pos);
+        temp.erase(0, (pos + del.length()));
+        int temp2 = stoi(temp);
+        temp2--;
+        printf(" %4s | %11d | %12d \n", pid.c_str(), temp2, frame_number);
     }
 }
 

@@ -141,9 +141,7 @@ int main(int argc, char **argv)
             } else if (command_list[1] == "page") {
                 page_table->print();
             } else if (command_list[1] == "processes") {
-                for (int j = 0; j < processesRunningSoFar.size(); j++) {
-                    std::cout << processesRunningSoFar[j] << std::endl;
-                }
+                mmu->printProcesses();
             } else {
                 std::vector<std::string> pidAndVar;
                 std::string del2 = ":";
@@ -326,9 +324,6 @@ void createProcess(int text_size, int data_size, Mmu *mmu, PageTable *page_table
 
 void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_t num_elements, Mmu *mmu, PageTable *page_table)
 {
-
-    
-
     // Get the total size of this new var
     uint32_t sizeInTotal;
     int sizeOfType;
@@ -347,13 +342,10 @@ void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_
     }
     // Get variableList
     std::vector<Variable*> variableList = mmu->getVariableList(pid);
-    
-    //std::cout << variableList.size()<< std::endl;
 
     int idxToInsert = -1;
     // Loop through the varList to find the middle spot that next to <free space>
     for (int i = 0; i < variableList.size(); i++) {
-        //std::cout << "test!!!!!!!!!!!!!!!" << std::endl;
         if (variableList[i]->name == "<FREE_SPACE>") {
             if (variableList[i]->size >= sizeInTotal) {
                 idxToInsert = i;
@@ -369,8 +361,6 @@ void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_
         return;
     }
     
-    std::cout << idxToInsert << "--------idxToInsert" << std::endl;
-
     double start_page_double;
     double end_page_double;
     int start_page_int;
@@ -386,20 +376,12 @@ void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_
             start_page_int = floor(start_page_double); // index, 0 ~ n
             end_page_double = ((double)variableList[idxToInsert-1]->size + (double)variableList[idxToInsert-1]->virtual_address + (double)sizeInTotal) / (double)page_table->getPageSize();
             end_page_int = floor(end_page_double); // index, 0 ~ n
-            int leftover = (variableList[idxToInsert-1]->size + variableList[idxToInsert-1]->virtual_address) % page_table->getPageSize();
+            int leftover = page_table->getPageSize() - ((variableList[idxToInsert-1]->size + variableList[idxToInsert-1]->virtual_address) % page_table->getPageSize());
+            
             if (leftover % sizeOfType != 0) { // if leftover can't be divided with no remainder by type size
                 uint32_t shortSpaceSize = leftover % sizeOfType;
-                Variable *newFreeSpace = new Variable();
                 // we get a small hole in between
-                newFreeSpace->name = "<FREE_SPACE>";
-                newFreeSpace->size = shortSpaceSize;
-                newFreeSpace->type = DataType::Char;
-                newFreeSpace->virtual_address = variableList[idxToInsert-1]->size + variableList[idxToInsert-1]->virtual_address;
-                // update free space on right side
-                variableList[idxToInsert]->size -= shortSpaceSize;
-                variableList[idxToInsert]->virtual_address += shortSpaceSize;
-                // insert the small hole
-                variableList.insert(variableList.begin() + idxToInsert, newFreeSpace);
+                mmu->addVariableToProcess(pid, "<FREE_SPACE>", DataType::Char, shortSpaceSize, variableList[idxToInsert-1]->size + variableList[idxToInsert-1]->virtual_address, idxToInsert);
                 idxToInsert++; // go right by 1 index
             }
             // find rest of pages whether have been on the book
@@ -408,49 +390,17 @@ void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_
                     page_table->addEntry(pid, i);
                 }
             }
-            
-            /*Variable *newVar = new Variable();
-            newVar->name = var_name;
-            newVar->size = sizeInTotal;
-            newVar->type = type;
-            newVar->virtual_address = variableList[idxToInsert-1]->size + variableList[idxToInsert-1]->virtual_address;
-            // update the right neighbor
-            variableList[idxToInsert]->size -= sizeInTotal;
-            variableList[idxToInsert]->virtual_address += sizeInTotal;
-            // insert new var
-            variableList.insert(variableList.begin() + idxToInsert, newVar);
-            //if (newVar->name != "<TEXT>" && newVar->name != "<GLOBALS>" &&  newVar->name != "<STACK>") {
-                //std::cout << newVar->virtual_address << std::endl;
-                //std::cout << variableList.front()->name << "111111111" << std::endl;
-            //}
-            */
+            std::vector<Variable*> variableList = mmu->getVariableList(pid);
             mmu->addVariableToProcess(pid, var_name, type, sizeInTotal, variableList[idxToInsert-1]->size + variableList[idxToInsert-1]->virtual_address, idxToInsert);
             
         } else {
-            // consume less than a page
-            /*Variable *newVar = new Variable();
-            newVar->name = var_name;
-            newVar->size = sizeInTotal;
-            newVar->type = type;
-            newVar->virtual_address = variableList[idxToInsert-1]->size + variableList[idxToInsert-1]->virtual_address;
-            // update the right neighbor
-            variableList[idxToInsert]->size -= sizeInTotal;
-            variableList[idxToInsert]->virtual_address += sizeInTotal;
-            */
             // insert new var
-            
             mmu->addVariableToProcess(pid, var_name, type, sizeInTotal, variableList[idxToInsert-1]->size + variableList[idxToInsert-1]->virtual_address, idxToInsert);
-            //variableList.insert(variableList.begin() + idxToInsert, newVar);
-            //if (newVar->name != "<TEXT>" && newVar->name != "<GLOBALS>" &&  newVar->name != "<STACK>") {
-                //std::cout << newVar->virtual_address << std::endl;
-                //std::cout << variableList.front()->name << "2222222222" << std::endl;
-            //}
+            
         }
     } else if (idxToInsert == 0) { // the new var is the most left one
         // Then it must be <TEXT>
         // It's an empty book, so just create pages for it
-
-        //std::cout << "??????????????????????????" << std::endl;
 
         end_page_double = (double)sizeInTotal / (double)page_table->getPageSize();
         start_page_int = 0;
@@ -462,27 +412,7 @@ void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_
                 std::cout << "--- We got a bug on Line 445 main ---" << std::endl;
             }
         }
-        /*Variable *newVar = new Variable();
-        newVar->name = var_name;
-        newVar->size = sizeInTotal;
-        newVar->type = type;
-        newVar->virtual_address = 0;
-        // update the right neighbor
-        variableList[idxToInsert]->size -= sizeInTotal;
-        variableList[idxToInsert]->virtual_address += sizeInTotal;
-        // insert new var
-        variableList.insert(variableList.begin() + idxToInsert, newVar);
-
-        std::cout << variableList.size() << std::endl;
-        */
-        //if (newVar->name != "<TEXT>" && newVar->name != "<GLOBALS>" &&  newVar->name != "<STACK>") {
-        //std::cout << newVar->virtual_address << std::endl;
-        //std::cout << variableList.front()->name << "33333333" << std::endl;
-        //}
-
         mmu->addVariableToProcess(pid, var_name, type, sizeInTotal, 0, idxToInsert);
-            
-
     }
 
 }
