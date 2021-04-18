@@ -32,7 +32,8 @@ int main(int argc, char **argv)
     // Create physical 'memory'
     uint32_t mem_size = 67108864; // Bytes
     void *memory = malloc(mem_size); // 64 MB (64 * 1024 * 1024)
-
+    memset(memory,'\0',sizeof(memory));
+    
     // Create MMU and Page Table
     Mmu *mmu = new Mmu(mem_size);
     PageTable *page_table = new PageTable(page_size);
@@ -56,8 +57,6 @@ int main(int argc, char **argv)
         if (command_list[0] == "create") {
             int text_size = std::stoi(command_list[1]);
             int data_size = std::stoi(command_list[2]);
-            //std::cout << text_size << std::endl;
-            //std::cout << data_size << std::endl;
             createProcess(text_size, data_size, mmu, page_table);
         } else if (command_list[0] == "allocate") {
             uint32_t pid = static_cast<uint32_t>(std::stoul(command_list[1]));
@@ -158,105 +157,118 @@ int main(int argc, char **argv)
                 pidAndVar.push_back(command_list[1]);
                 uint32_t tempPid = static_cast<uint32_t>(std::stoul(pidAndVar[0]));
                 Variable* tempVar = mmu->findVariable(tempPid, pidAndVar[1]);
-                int phys_addr = page_table->getPhysicalAddress(tempPid, tempVar->virtual_address);
+                //int phys_addr = page_table->getPhysicalAddress(tempPid, tempVar->virtual_address);
                 if (tempVar->type == DataType::Char) {
-                    char tempCharArray[tempVar->size];
-                    memcpy(tempCharArray, (char*)memory + phys_addr, tempVar->size);
-                    if (tempVar->size > 4) { // do we have more than 4 items?
+                    uint32_t items = tempVar->size / 1;
+                    char tempCharArray[items];
+                    for (int d = 0; d < items; d++) {
+                        memcpy(tempCharArray + d, (char*)memory + page_table->getPhysicalAddress(tempPid, tempVar->virtual_address + d * 1), 1);
+                    }
+                    if (items > 4) { // do we have more than 4 items?
                         printf("%c", tempCharArray[0]);
                         for (int h = 1; h < 4; h++) { // print first 4 items
                             printf(", %c", tempCharArray[h]);
                         }
-                        printf(", ... [%ul items]\n", tempVar->size);
+                        printf(", ... [%d items]\n", items);
                     } else {
                         printf("%c", tempCharArray[0]);
-                        for (int h = 1; h < tempVar->size; h++) { // print first 4 items
+                        for (int h = 1; h < items; h++) { // print first 4 items
                             printf(", %c", tempCharArray[h]);
                         }
                         printf("\n");
                     }
                 } else if (tempVar->type == DataType::Short) {
                     uint32_t items = tempVar->size / 2;
-                    short tempShortArray[items];
-                    memcpy(tempShortArray, (char*)memory + phys_addr, tempVar->size);
+                    short tempCharArray[items];
+                    for (int d = 0; d < items; d++) {
+                        memcpy(tempCharArray + d, (char*)memory + page_table->getPhysicalAddress(tempPid, tempVar->virtual_address + d * 2), 2);
+                    }
                     if (items > 4) { // do we have more than 4 items?
-                        printf("%hd", tempShortArray[0]);
+                        printf("%hd", tempCharArray[0]);
                         for (int h = 1; h < 4; h++) { // print first 4 items
-                            printf(", %hd", tempShortArray[h]);
+                            printf(", %hd", tempCharArray[h]);
                         }
-                        printf(", ... [%ul items]\n", items);
+                        printf(", ... [%d items]\n", items);
                     } else {
-                        printf("%hd", tempShortArray[0]);
+                        printf("%hd", tempCharArray[0]);
                         for (int h = 1; h < items; h++) { // print first 4 items
-                            printf(", %hd", tempShortArray[h]);
+                            printf(", %hd", tempCharArray[h]);
                         }
                         printf("\n");
                     }
                 } else if (tempVar->type == DataType::Int) {
                     uint32_t items = tempVar->size / 4;
-                    int tempIntArray[items];
-                    memcpy(tempIntArray, (char*)memory + phys_addr, tempVar->size);
+                    int tempCharArray[items];
+                    for (int d = 0; d < items; d++) {
+                        memcpy(tempCharArray + d, (char*)memory + page_table->getPhysicalAddress(tempPid, tempVar->virtual_address + d * 4), 4);
+                    }
                     if (items > 4) { // do we have more than 4 items?
-                        printf("%d", tempIntArray[0]);
+                        printf("%d", tempCharArray[0]);
                         for (int h = 1; h < 4; h++) { // print first 4 items
-                            printf(", %d", tempIntArray[h]);
+                            printf(", %d", tempCharArray[h]);
                         }
-                        printf(", ... [%ul items]\n", items);
+                        printf(", ... [%d items]\n", items);
                     } else {
-                        printf("%d", tempIntArray[0]);
+                        printf("%d", tempCharArray[0]);
                         for (int h = 1; h < items; h++) { // print first 4 items
-                            printf(", %d", tempIntArray[h]);
+                            printf(", %d", tempCharArray[h]);
                         }
                         printf("\n");
                     }
                 } else if (tempVar->type == DataType::Float) {
                     uint32_t items = tempVar->size / 4;
-                    float tempFloatArray[items];
-                    memcpy(tempFloatArray, (char*)memory + phys_addr, tempVar->size);
+                    float tempCharArray[items];
+                    for (int d = 0; d < items; d++) {
+                        memcpy(tempCharArray + d, (char*)memory + page_table->getPhysicalAddress(tempPid, tempVar->virtual_address + d * 4), 4);
+                    }
                     if (items > 4) { // do we have more than 4 items?
-                        printf("%f", tempFloatArray[0]);
+                        printf("%f", tempCharArray[0]);
                         for (int h = 1; h < 4; h++) { // print first 4 items
-                            printf(", %f", tempFloatArray[h]);
+                            printf(", %f", tempCharArray[h]);
                         }
-                        printf(", ... [%ul items]\n", items);
+                        printf(", ... [%d items]\n", items);
                     } else {
-                        printf("%f", tempFloatArray[0]);
+                        printf("%f", tempCharArray[0]);
                         for (int h = 1; h < items; h++) { // print first 4 items
-                            printf(", %f", tempFloatArray[h]);
+                            printf(", %f", tempCharArray[h]);
                         }
                         printf("\n");
                     }
                 } else if (tempVar->type == DataType::Long) {
                     uint32_t items = tempVar->size / 8;
-                    long tempLongArray[items];
-                    memcpy(tempLongArray, (char*)memory + phys_addr, tempVar->size);
+                    long tempCharArray[items];
+                    for (int d = 0; d < items; d++) {
+                        memcpy(tempCharArray + d, (char*)memory + page_table->getPhysicalAddress(tempPid, tempVar->virtual_address + d * 8), 8);
+                    }
                     if (items > 4) { // do we have more than 4 items?
-                        printf("%ld", tempLongArray[0]);
+                        printf("%ld", tempCharArray[0]);
                         for (int h = 1; h < 4; h++) { // print first 4 items
-                            printf(", %ld", tempLongArray[h]);
+                            printf(", %ld", tempCharArray[h]);
                         }
-                        printf(", ... [%ul items]\n", items);
+                        printf(", ... [%d items]\n", items);
                     } else {
-                        printf("%ld", tempLongArray[0]);
+                        printf("%ld", tempCharArray[0]);
                         for (int h = 1; h < items; h++) { // print first 4 items
-                            printf(", %ld", tempLongArray[h]);
+                            printf(", %ld", tempCharArray[h]);
                         }
                         printf("\n");
                     }
                 } else if (tempVar->type == DataType::Double) {
                     uint32_t items = tempVar->size / 8;
-                    double tempDoubleArray[items];
-                    memcpy(tempDoubleArray, (char*)memory + phys_addr, tempVar->size);
+                    double tempCharArray[items];
+                    for (int d = 0; d < items; d++) {
+                        memcpy(tempCharArray + d, (char*)memory + page_table->getPhysicalAddress(tempPid, tempVar->virtual_address + d * 8), 8);
+                    }
                     if (items > 4) { // do we have more than 4 items?
-                        printf("%f", tempDoubleArray[0]);
+                        printf("%f", tempCharArray[0]);
                         for (int h = 1; h < 4; h++) { // print first 4 items
-                            printf(", %f", tempDoubleArray[h]);
+                            printf(", %f", tempCharArray[h]);
                         }
-                        printf(", ... [%ul items]\n", items);
+                        printf(", ... [%d items]\n", items);
                     } else {
-                        printf("%f", tempDoubleArray[0]);
+                        printf("%f", tempCharArray[0]);
                         for (int h = 1; h < items; h++) { // print first 4 items
-                            printf(", %f", tempDoubleArray[h]);
+                            printf(", %f", tempCharArray[h]);
                         }
                         printf("\n");
                     }
@@ -297,7 +309,6 @@ void printStartMessage(int page_size)
 
 void createProcess(int text_size, int data_size, Mmu *mmu, PageTable *page_table)
 {
-    // TODO: implement this!
     uint32_t pid;
     uint32_t stack_size = 65536;
     std::string text = "<TEXT>";
@@ -315,6 +326,9 @@ void createProcess(int text_size, int data_size, Mmu *mmu, PageTable *page_table
 
 void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_t num_elements, Mmu *mmu, PageTable *page_table)
 {
+
+    
+
     // Get the total size of this new var
     uint32_t sizeInTotal;
     int sizeOfType;
@@ -333,9 +347,13 @@ void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_
     }
     // Get variableList
     std::vector<Variable*> variableList = mmu->getVariableList(pid);
+    
+    //std::cout << variableList.size()<< std::endl;
+
     int idxToInsert = -1;
     // Loop through the varList to find the middle spot that next to <free space>
     for (int i = 0; i < variableList.size(); i++) {
+        //std::cout << "test!!!!!!!!!!!!!!!" << std::endl;
         if (variableList[i]->name == "<FREE_SPACE>") {
             if (variableList[i]->size >= sizeInTotal) {
                 idxToInsert = i;
@@ -343,12 +361,15 @@ void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_
             }
         }
     }
-
+    
     if (idxToInsert == -1) {
         // no free space in that process which means it exceeds 64 MB
+        std::cout << "error!!! -1 " << std::endl;
         // error
         return;
     }
+    
+    std::cout << idxToInsert << "--------idxToInsert" << std::endl;
 
     double start_page_double;
     double end_page_double;
@@ -358,8 +379,9 @@ void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_
     // VariableList looks like: [<TEXT>, <GLOBALS>, <STACK>, thisIsAnInt, <FREE_SPACE>]
     //                                                                   ^
     //                                                   each time we insert the new var here
+
     if (idxToInsert != 0) { // if the new var has a neighbor on its left
-        if (sizeInTotal > (variableList[idxToInsert-1]->size + variableList[idxToInsert-1]->virtual_address) % page_table->getPageSize()) {
+        if (sizeInTotal > page_table->getPageSize() - (variableList[idxToInsert-1]->size + variableList[idxToInsert-1]->virtual_address) % page_table->getPageSize()) {
             start_page_double = ((double)variableList[idxToInsert-1]->size + (double)variableList[idxToInsert-1]->virtual_address) / (double)page_table->getPageSize();
             start_page_int = floor(start_page_double); // index, 0 ~ n
             end_page_double = ((double)variableList[idxToInsert-1]->size + (double)variableList[idxToInsert-1]->virtual_address + (double)sizeInTotal) / (double)page_table->getPageSize();
@@ -386,7 +408,8 @@ void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_
                     page_table->addEntry(pid, i);
                 }
             }
-            Variable *newVar = new Variable();
+            
+            /*Variable *newVar = new Variable();
             newVar->name = var_name;
             newVar->size = sizeInTotal;
             newVar->type = type;
@@ -396,12 +419,16 @@ void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_
             variableList[idxToInsert]->virtual_address += sizeInTotal;
             // insert new var
             variableList.insert(variableList.begin() + idxToInsert, newVar);
-            if (newVar->name != "<TEXT>" && newVar->name != "<GLOBALS>" &&  newVar->name != "<STACK>") {
-                std::cout << newVar->virtual_address << std::endl;
-            }
+            //if (newVar->name != "<TEXT>" && newVar->name != "<GLOBALS>" &&  newVar->name != "<STACK>") {
+                //std::cout << newVar->virtual_address << std::endl;
+                //std::cout << variableList.front()->name << "111111111" << std::endl;
+            //}
+            */
+            mmu->addVariableToProcess(pid, var_name, type, sizeInTotal, variableList[idxToInsert-1]->size + variableList[idxToInsert-1]->virtual_address, idxToInsert);
+            
         } else {
             // consume less than a page
-            Variable *newVar = new Variable();
+            /*Variable *newVar = new Variable();
             newVar->name = var_name;
             newVar->size = sizeInTotal;
             newVar->type = type;
@@ -409,15 +436,22 @@ void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_
             // update the right neighbor
             variableList[idxToInsert]->size -= sizeInTotal;
             variableList[idxToInsert]->virtual_address += sizeInTotal;
+            */
             // insert new var
-            variableList.insert(variableList.begin() + idxToInsert, newVar);
-            if (newVar->name != "<TEXT>" && newVar->name != "<GLOBALS>" &&  newVar->name != "<STACK>") {
-                std::cout << newVar->virtual_address << std::endl;
-            }
+            
+            mmu->addVariableToProcess(pid, var_name, type, sizeInTotal, variableList[idxToInsert-1]->size + variableList[idxToInsert-1]->virtual_address, idxToInsert);
+            //variableList.insert(variableList.begin() + idxToInsert, newVar);
+            //if (newVar->name != "<TEXT>" && newVar->name != "<GLOBALS>" &&  newVar->name != "<STACK>") {
+                //std::cout << newVar->virtual_address << std::endl;
+                //std::cout << variableList.front()->name << "2222222222" << std::endl;
+            //}
         }
     } else if (idxToInsert == 0) { // the new var is the most left one
         // Then it must be <TEXT>
         // It's an empty book, so just create pages for it
+
+        //std::cout << "??????????????????????????" << std::endl;
+
         end_page_double = (double)sizeInTotal / (double)page_table->getPageSize();
         start_page_int = 0;
         end_page_int = floor(end_page_double);
@@ -425,10 +459,10 @@ void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_
             if(!page_table->lookUpTable(pid, i)) {
                 page_table->addEntry(pid, i);
             } else {
-                std::cout << "--- We got a bad bug ---" << std::endl;
+                std::cout << "--- We got a bug on Line 445 main ---" << std::endl;
             }
         }
-        Variable *newVar = new Variable();
+        /*Variable *newVar = new Variable();
         newVar->name = var_name;
         newVar->size = sizeInTotal;
         newVar->type = type;
@@ -438,20 +472,57 @@ void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_
         variableList[idxToInsert]->virtual_address += sizeInTotal;
         // insert new var
         variableList.insert(variableList.begin() + idxToInsert, newVar);
-        if (newVar->name != "<TEXT>" && newVar->name != "<GLOBALS>" &&  newVar->name != "<STACK>") {
-            std::cout << newVar->virtual_address << std::endl;
-        }
+
+        std::cout << variableList.size() << std::endl;
+        */
+        //if (newVar->name != "<TEXT>" && newVar->name != "<GLOBALS>" &&  newVar->name != "<STACK>") {
+        //std::cout << newVar->virtual_address << std::endl;
+        //std::cout << variableList.front()->name << "33333333" << std::endl;
+        //}
+
+        mmu->addVariableToProcess(pid, var_name, type, sizeInTotal, 0, idxToInsert);
+            
+
     }
 
 }
 
 void setVariable(uint32_t pid, std::string var_name, uint32_t offset, void *value, Mmu *mmu, PageTable *page_table, void *memory)
 {
-    // TODO: implement this!
-    //   - look up physical address for variable based on its virtual address / offset
-    //   - insert `value` into `memory` at physical address
-    //   * note: this function only handles a single element (i.e. you'll need to call this within a loop when setting
-    //           multiple elements of an array) 
+    Variable* targetVar;
+    int phys_addr;
+    uint32_t idx;
+    if (DataType::Char == mmu->getVariableType(pid, var_name)) {
+        targetVar = mmu->findVariable(pid, var_name);
+        idx = targetVar->virtual_address + offset * 1;
+        phys_addr = page_table->getPhysicalAddress(pid, idx);
+        memcpy((char*)memory + phys_addr, value, 1);
+    } else if (DataType::Short == mmu->getVariableType(pid, var_name)) {
+        targetVar = mmu->findVariable(pid, var_name);
+        idx = targetVar->virtual_address + offset * 2;
+        phys_addr = page_table->getPhysicalAddress(pid, idx);
+        memcpy((char*)memory + phys_addr, value, 2);
+    } else if (DataType::Int == mmu->getVariableType(pid, var_name)) {
+        targetVar = mmu->findVariable(pid, var_name);
+        idx = targetVar->virtual_address + offset * 4;
+        phys_addr = page_table->getPhysicalAddress(pid, idx);
+        memcpy((char*)memory + phys_addr, value, 4);
+    } else if (DataType::Float == mmu->getVariableType(pid, var_name)) {
+        targetVar = mmu->findVariable(pid, var_name);
+        idx = targetVar->virtual_address + offset * 4;
+        phys_addr = page_table->getPhysicalAddress(pid, idx);
+        memcpy((char*)memory + phys_addr, value, 4);
+    } else if (DataType::Long == mmu->getVariableType(pid, var_name)) {
+        targetVar = mmu->findVariable(pid, var_name);
+        idx = targetVar->virtual_address + offset * 8;
+        phys_addr = page_table->getPhysicalAddress(pid, idx);
+        memcpy((char*)memory + phys_addr, value, 8);
+    } else if (DataType::Double == mmu->getVariableType(pid, var_name)) {
+        targetVar = mmu->findVariable(pid, var_name);
+        idx = targetVar->virtual_address + offset * 8;
+        phys_addr = page_table->getPhysicalAddress(pid, idx);
+        memcpy((char*)memory + phys_addr, value, 8);
+    }
 }
 
 void freeVariable(uint32_t pid, std::string var_name, Mmu *mmu, PageTable *page_table)

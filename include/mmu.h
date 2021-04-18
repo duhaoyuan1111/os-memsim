@@ -30,13 +30,13 @@ public:
     ~Mmu();
 
     uint32_t createProcess();
-    void addVariableToProcess(uint32_t pid, std::string var_name, DataType type, uint32_t size, uint32_t address);
+    void addVariableToProcess(uint32_t pid, std::string var_name, DataType type, uint32_t size, uint32_t address, int idxToInsert);
     void print();
     DataType getVariableType(uint32_t pid, std::string var_name);
     bool doWeHaveProcess(uint32_t pid);
     bool doWeHaveVariable(uint32_t pid, std::string var_name);
     Variable* findVariable(uint32_t pid, std::string var_name);
-    std::vector<Variable*> Mmu::getVariableList(uint32_t pid);
+    std::vector<Variable*> getVariableList(uint32_t pid);
 };
 
 #endif // __MMU_H_

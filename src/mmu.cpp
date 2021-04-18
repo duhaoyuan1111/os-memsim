@@ -28,7 +28,7 @@ uint32_t Mmu::createProcess()
     return proc->pid;
 }
 
-void Mmu::addVariableToProcess(uint32_t pid, std::string var_name, DataType type, uint32_t size, uint32_t address)
+void Mmu::addVariableToProcess(uint32_t pid, std::string var_name, DataType type, uint32_t size, uint32_t address, int idxToInsert)
 {
     int i;
     Process *proc = NULL;
@@ -47,7 +47,14 @@ void Mmu::addVariableToProcess(uint32_t pid, std::string var_name, DataType type
     var->size = size;
     if (proc != NULL)
     {
-        proc->variables.push_back(var);
+        proc->variables[idxToInsert]->size -= size;
+        proc->variables[idxToInsert]->virtual_address += size;
+        proc->variables.insert(proc->variables.begin() + idxToInsert, var);
+        //push_back(var);
+        std::cout << var->virtual_address << "---vir_addr" << std::endl;
+        std::cout << var->name << "---name" << std::endl;
+        std::cout << proc->variables.size() << "---size"<< std::endl;
+        std::cout << var->virtual_address + var->size << "---ending addr"<< std::endl;
     }
 }
 
@@ -82,7 +89,8 @@ DataType Mmu::getVariableType(uint32_t pid, std::string var_name) {
             return proc->variables[j]->type;
         }
     }
-    
+    std::cout << "We got a bug in Mmu::getVariableType." << std::endl;
+    return FreeSpace;
 }
 
 bool Mmu::doWeHaveProcess(uint32_t pid) {
@@ -137,6 +145,8 @@ Variable* Mmu::findVariable(uint32_t pid, std::string var_name) {
             return proc->variables[j];
         }
     }
+    std::cout << "We got a bug in Mmu::findVariable." << std::endl;
+    return NULL;
 }
 
 std::vector<Variable*> Mmu::getVariableList(uint32_t pid) {

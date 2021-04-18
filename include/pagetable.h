@@ -37,7 +37,7 @@ public:
     int getPhysicalAddress(uint32_t pid, uint32_t virtual_address);
     void print();
     int getPageSize();
-    bool PageTable::lookUpTable(uint32_t pid, int page_number);
+    bool lookUpTable(uint32_t pid, int page_number);
 };
 
 #endif // __PAGETABLE_H_
