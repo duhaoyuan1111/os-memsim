@@ -457,9 +457,37 @@ void setVariable(uint32_t pid, std::string var_name, uint32_t offset, void *valu
 
 void freeVariable(uint32_t pid, std::string var_name, Mmu *mmu, PageTable *page_table)
 {
-    // TODO: implement this!
-    //   - remove entry from MMU
-    //   - free page if this variable was the only one on a given page
+    // Get variableList
+    std::vector<Variable*> variableList = mmu->getVariableList(pid);
+    int idxToRemove = -1;
+    for (int i = 0; i < variableList.size(); i++) {
+        if (variableList[i]->name == var_name) {
+            idxToRemove = i;
+            break;
+        }
+    }
+    
+    if (idxToRemove == -1) {
+        // this var is not found
+        std::cout << "error!!! 404 nf " << std::endl;
+        // error
+        return;
+    }
+    double start_page_double;
+    double end_page_double;
+    int start_page_int;
+    int end_page_int;
+    start_page_double = ((double)variableList[idxToRemove]->virtual_address) / (double)page_table->getPageSize();
+    start_page_int = floor(start_page_double); // index, 0 ~ n
+    end_page_double = ((double)variableList[idxToRemove]->size + (double)variableList[idxToRemove]->virtual_address) / (double)page_table->getPageSize();
+    end_page_int = floor(end_page_double); // index, 0 ~ n
+    mmu->removeVariableFromProcess(pid, var_name);
+    std::vector<int> deletePages = mmu->mergeFreeSpace(pid, page_table->getPageSize());
+    if (deletePages[0] != -1) {
+        for (int p = 0; p < deletePages.size(); p++) {
+            page_table->deleteEntry(pid, deletePages[p]);
+        }
+    }
 }
 
 void terminateProcess(uint32_t pid, Mmu *mmu, PageTable *page_table)

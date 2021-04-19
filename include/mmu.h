@@ -38,6 +38,8 @@ public:
     Variable* findVariable(uint32_t pid, std::string var_name);
     std::vector<Variable*> getVariableList(uint32_t pid);
     void printProcesses();
+    void removeVariableFromProcess(uint32_t pid, std::string var_name);
+    std::vector<int> mergeFreeSpace(uint32_t pid, int page_size);
 };
 
 #endif // __MMU_H_

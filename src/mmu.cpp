@@ -1,4 +1,5 @@
 #include "mmu.h"
+#include <math.h>
 
 Mmu::Mmu(int memory_size)
 {
@@ -174,5 +175,77 @@ void Mmu::printProcesses() {
     for (int i = 0; i < _processes.size(); i++) {
         std::cout << _processes[i]->pid << std::endl;
     }
-    
+}
+
+void Mmu::removeVariableFromProcess(uint32_t pid, std::string var_name) {
+    int i;
+    Process *proc = NULL;
+    for (i = 0; i < _processes.size(); i++)
+    {
+        if (_processes[i]->pid == pid)
+        {
+            proc = _processes[i];
+        }
+    }
+    for (int j = 0; j < proc->variables.size(); j++) {
+        if (proc->variables[j]->name == var_name)
+        {
+            proc->variables[j]->name = "<FREE_SPACE>";
+        }
+    }
+}
+
+std::vector<int> Mmu::mergeFreeSpace(uint32_t pid, int page_size) {
+    int i;
+    Process *proc = NULL;
+    std::vector<int> retVec;
+    for (i = 0; i < _processes.size(); i++)
+    {
+        if (_processes[i]->pid == pid)
+        {
+            proc = _processes[i];
+        }
+    }
+    int j = 0;
+    while (j < proc->variables.size() - 1) { // merge
+        int flag = 0;
+        if (proc->variables[j]->name == "<FREE_SPACE>" && proc->variables[j+1]->name == "<FREE_SPACE>") {
+            proc->variables[j]->size += proc->variables[j+1]->size;
+            flag = 1;
+        }
+        if (flag == 1) {
+            proc->variables.erase(proc->variables.begin() + j + 1); // delete right one
+        } else {
+            j++;
+        }
+    }
+    for (int k = 0; k < proc->variables.size(); k++) { // pages need to be deleted
+        if (proc->variables[k]->name == "<FREE_SPACE>") {
+            double start_page_double;
+            double end_page_double;
+            int start_page_int;
+            int end_page_int;
+            start_page_double = ((double)proc->variables[k]->virtual_address) / (double)page_size;
+            start_page_int = floor(start_page_double); // index, 0 ~ n
+            end_page_double = ((double)proc->variables[k]->size + (double)proc->variables[k]->virtual_address) / (double)page_size;
+            end_page_int = floor(end_page_double); // index, 0 ~ n
+            if (start_page_int + 1 < end_page_int) {
+                for (int d = start_page_int + 1; d < end_page_int; d++) {
+                    retVec.push_back(d);
+                }
+            }
+            if ((proc->variables[k]->virtual_address % page_size == 0) && (start_page_int != end_page_int)) { // start at the beginning of the page
+                retVec.push_back(start_page_int);
+            }
+            if (((proc->variables[k]->virtual_address + proc->variables[k]->size) % page_size == 0) && (start_page_int != end_page_int)) { // end at the end of the page
+                retVec.push_back(end_page_int);
+            }
+        }
+    }
+    if (retVec.empty()) {
+        retVec.push_back(-1);
+        return retVec;
+    } else {
+        return retVec;
+    }
 }

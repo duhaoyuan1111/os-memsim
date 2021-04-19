@@ -28,16 +28,19 @@ void PageTable::addEntry(uint32_t pid, int page_number)
 {
     // Combination of pid and page number act as the key to look up frame number
     std::string entry = std::to_string(pid) + "|" + std::to_string(page_number);
-
     int frame = 0;
+    std::vector<std::string> keys = sortedKeys();
     // Find free frame
     if (!_table.empty()) { // not empty
-        for (auto const& x : _table) {
-            if (x.second >= frame) {
-                frame = x.second;
+        for (int i = 0; i < keys.size() - 1; i++) {
+            if (_table[keys[i]] + 1 != _table[keys[i+1]]) {
+                // free frame in middle
+                frame = i+1;
+                _table[entry] = frame;
+                return;
             }
         }
-        frame++; // next valid frame
+        frame = keys.size(); // next valid frame
         _table[entry] = frame;
     } else { // empty, use frame 0
         _table[entry] = frame;
@@ -100,4 +103,12 @@ bool PageTable::lookUpTable(uint32_t pid, int page_number) {
         // not existed yet
         return false;
     }
+}
+
+void PageTable::deleteEntry(uint32_t pid, int page_number) {
+    std::string entry = std::to_string(pid) + "|" + std::to_string(page_number);
+    if (_table.count(entry) > 0) {
+        _table.erase(entry);
+    }
+    
 }
