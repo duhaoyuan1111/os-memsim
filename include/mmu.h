@@ -40,6 +40,7 @@ public:
     void printProcesses();
     void removeVariableFromProcess(uint32_t pid, std::string var_name);
     std::vector<int> mergeFreeSpace(uint32_t pid, int page_size);
+    void removeProcessFromMmu(uint32_t pid);
 };
 
 #endif // __MMU_H_

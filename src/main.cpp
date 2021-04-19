@@ -77,7 +77,15 @@ int main(int argc, char **argv)
                 type = Double;
             }
             uint32_t num_elements = static_cast<uint32_t>(std::stoul(command_list[4]));
-            allocateVariable(pid, var_name, type, num_elements, mmu, page_table);
+            if (!mmu->doWeHaveProcess(pid)) {
+                // error: process not found
+                std::cout << "error: process not found" << std::endl;
+            } else if (mmu->doWeHaveVariable(pid, var_name)) {
+                // error: variable already exists
+                std::cout << "error: variable already exists" << std::endl;
+            } else {
+                allocateVariable(pid, var_name, type, num_elements, mmu, page_table);
+            }
         } else if (command_list[0] == "set") {
             uint32_t pid = static_cast<uint32_t>(std::stoul(command_list[1]));
             std::string var_name = command_list[2];
@@ -131,10 +139,23 @@ int main(int argc, char **argv)
         } else if (command_list[0] == "free") {
             uint32_t pid = static_cast<uint32_t>(std::stoul(command_list[1]));
             std::string var_name = command_list[2];
-            freeVariable(pid, var_name, mmu, page_table);
+            if (!mmu->doWeHaveProcess(pid)) {
+                // error: process not found
+                std::cout << "error: process not found" << std::endl;
+            } else if (!mmu->doWeHaveVariable(pid, var_name)) {
+                // error: variable not found
+                std::cout << "error: variable not found" << std::endl;
+            } else {
+                freeVariable(pid, var_name, mmu, page_table);
+            }
         } else if (command_list[0] == "terminate") {
             uint32_t pid = static_cast<uint32_t>(std::stoul(command_list[1]));
-            terminateProcess(pid, mmu, page_table);
+            if (!mmu->doWeHaveProcess(pid)) {
+                // error: process not found
+                std::cout << "error: process not found" << std::endl;
+            } else {
+                terminateProcess(pid, mmu, page_table);
+            }
         } else if (command_list[0] == "print") {
             if (command_list[1] == "mmu") {
                 mmu->print();
@@ -274,6 +295,8 @@ int main(int argc, char **argv)
                 
             }
 
+        } else {
+            std::cout << "error: command not recognized" << std::endl;
         }
         // Get next command
         std::cout << "> ";
@@ -492,7 +515,6 @@ void freeVariable(uint32_t pid, std::string var_name, Mmu *mmu, PageTable *page_
 
 void terminateProcess(uint32_t pid, Mmu *mmu, PageTable *page_table)
 {
-    // TODO: implement this!
-    //   - remove process from MMU
-    //   - free all pages associated with given process
+    page_table->deleteProcessEntry(pid);
+    mmu->removeProcessFromMmu(pid);
 }

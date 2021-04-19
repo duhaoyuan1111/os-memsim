@@ -31,20 +31,26 @@ void PageTable::addEntry(uint32_t pid, int page_number)
     int frame = 0;
     std::vector<std::string> keys = sortedKeys();
     // Find free frame
-    if (!_table.empty()) { // not empty
-        for (int i = 0; i < keys.size() - 1; i++) {
-            if (_table[keys[i]] + 1 != _table[keys[i+1]]) {
-                // free frame in middle
-                frame = i+1;
-                _table[entry] = frame;
-                return;
+    if (_table.empty()) {
+        _table[entry] = 0;
+        return;
+    }
+    int flag = -1;
+    for (int i = 0; i < 65536; i++) {
+        if (flag != -1) {
+            break;
+        }
+        for (int j = 0; j < keys.size(); j++) {
+            if (_table[keys[j]] == i) { // find this frame
+                break;
+            }
+            if (j == keys.size() - 1) { // last loop
+                flag = i;
             }
         }
-        frame = keys.size(); // next valid frame
-        _table[entry] = frame;
-    } else { // empty, use frame 0
-        _table[entry] = frame;
     }
+    frame = flag;
+    _table[entry] = frame;
 }
 
 int PageTable::getPhysicalAddress(uint32_t pid, uint32_t virtual_address)
@@ -111,4 +117,13 @@ void PageTable::deleteEntry(uint32_t pid, int page_number) {
         _table.erase(entry);
     }
     
+}
+
+void PageTable::deleteProcessEntry(uint32_t pid) {
+    for (int i = 0; i < 65536; i++) {
+        std::string entry = std::to_string(pid) + "|" + std::to_string(i);
+        if (_table.count(entry) > 0) {
+            _table.erase(entry);
+        }
+    }
 }

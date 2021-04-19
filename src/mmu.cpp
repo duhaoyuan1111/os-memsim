@@ -41,6 +41,19 @@ void Mmu::addVariableToProcess(uint32_t pid, std::string var_name, DataType type
         }
     }
 
+    // Print error message if an allocation would exceed system memory (and don't perform allocation)
+    uint32_t cal = 0;
+    if (idxToInsert == proc->variables.size() - 1) { // if insert at the end
+        for (int j = 0; j < _processes.size(); j++) {
+            cal += _processes[j]->variables[_processes[j]->variables.size() - 1]->virtual_address;
+        }
+    }
+    cal += size;
+    if (cal > 67108864) {
+        std::cout << "error: this allocation would exceed system memory" << std::endl;
+        return;
+    }
+
     Variable *var = new Variable();
     var->name = var_name;
     var->type = type;
@@ -247,5 +260,15 @@ std::vector<int> Mmu::mergeFreeSpace(uint32_t pid, int page_size) {
         return retVec;
     } else {
         return retVec;
+    }
+}
+
+void Mmu::removeProcessFromMmu(uint32_t pid) {
+    for (int i = 0; i < _processes.size(); i++)
+    {
+        if (_processes[i]->pid == pid)
+        {
+            _processes.erase(_processes.begin() + i);
+        }
     }
 }

@@ -39,6 +39,7 @@ public:
     int getPageSize();
     bool lookUpTable(uint32_t pid, int page_number);
     void deleteEntry(uint32_t pid, int page_number);
+    void deleteProcessEntry(uint32_t pid);
 };
 
 #endif // __PAGETABLE_H_
